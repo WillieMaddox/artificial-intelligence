@@ -91,9 +91,10 @@ def assign_value(values, box, value):
         history[values2grid(values)] = (prev, (box, value))
     return values
 
+
 def cross(A, B):
     """Cross product of elements in A and elements in B """
-    return [x+y for x in A for y in B]
+    return [x + y for x in A for y in B]
 
 
 def values2grid(values):
