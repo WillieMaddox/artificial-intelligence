@@ -30,7 +30,7 @@ class ActionLayer(BaseActionLayer):
         raise NotImplementedError
 
     def _competing_needs(self, actionA, actionB):
-        """ Return True if the preconditions of the actions are all pairwise mutex in the parent layer 
+        """ Return True if any preconditions of the two actions are pairwise mutex in the parent layer
         
         See Also
         --------
@@ -213,7 +213,7 @@ class PlanningGraph:
                 parent_literals.add_outbound_edges(action, action.preconditions)
                 action_layer.add_inbound_edges(action, action.preconditions)
 
-                # # add two-way edges in the graph connecting the new literaly layer with the new action
+                # # add two-way edges in the graph connecting the new literal layer with the new action
                 action_layer.add_outbound_edges(action, action.effects)
                 literal_layer.add_inbound_edges(action, action.effects)
 
