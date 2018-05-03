@@ -1,4 +1,3 @@
-
 import unittest
 
 from itertools import chain
@@ -27,25 +26,49 @@ class TestPlanningGraphHeuristics(unittest.TestCase):
         self.ac_node_3 = Node(self.ac_problem_3.initial)
         self.ac_node_4 = Node(self.ac_problem_4.initial)
 
-    def test_levelsum(self):
+    def test_levelsum1(self):
         self.assertEqual(self.cake_problem.h_pg_levelsum(self.cake_node), 1)
+
+    def test_levelsum2(self):
         self.assertEqual(self.ac_problem_1.h_pg_levelsum(self.ac_node_1), 4)
+
+    def test_levelsum3(self):
         self.assertEqual(self.ac_problem_2.h_pg_levelsum(self.ac_node_2), 6)
+
+    def test_levelsum4(self):
         self.assertEqual(self.ac_problem_3.h_pg_levelsum(self.ac_node_3), 10)
+
+    def test_levelsum5(self):
         self.assertEqual(self.ac_problem_4.h_pg_levelsum(self.ac_node_4), 13)
 
-    def test_maxlevel(self):
+    def test_maxlevel1(self):
         self.assertEqual(self.cake_problem.h_pg_maxlevel(self.cake_node), 1)
+
+    def test_maxlevel2(self):
         self.assertEqual(self.ac_problem_1.h_pg_maxlevel(self.ac_node_1), 2)
+
+    def test_maxlevel3(self):
         self.assertEqual(self.ac_problem_2.h_pg_maxlevel(self.ac_node_2), 2)
+
+    def test_maxlevel4(self):
         self.assertEqual(self.ac_problem_3.h_pg_maxlevel(self.ac_node_3), 3)
+
+    def test_maxlevel5(self):
         self.assertEqual(self.ac_problem_4.h_pg_maxlevel(self.ac_node_4), 3)
 
-    def test_setlevel(self):
+    def test_setlevel1(self):
         self.assertEqual(self.cake_problem.h_pg_setlevel(self.cake_node), 2)
+
+    def test_setlevel2(self):
         self.assertEqual(self.ac_problem_1.h_pg_setlevel(self.ac_node_1), 4)
+
+    def test_setlevel3(self):
         self.assertEqual(self.ac_problem_2.h_pg_setlevel(self.ac_node_2), 4)
+
+    def test_setlevel4(self):
         self.assertEqual(self.ac_problem_3.h_pg_setlevel(self.ac_node_3), 6)
+
+    def test_setlevel5(self):
         self.assertEqual(self.ac_problem_4.h_pg_setlevel(self.ac_node_4), 6)
 
 
@@ -53,7 +76,7 @@ class TestPlanningGraphMutex(unittest.TestCase):
     def setUp(self):
         self.cake_problem = have_cake()
         self.cake_pg = PlanningGraph(self.cake_problem, self.cake_problem.initial, serialize=False).fill()
-        
+
         eat_action, bake_action = [a for a in self.cake_pg._actionNodes if not a.no_op]
         no_ops = [a for a in self.cake_pg._actionNodes if a.no_op]
 
@@ -69,7 +92,7 @@ class TestPlanningGraphMutex(unittest.TestCase):
         # which are logical inverses, so eat & bake should be mutex at every
         # level of the planning graph where both actions appear
         self.competing_needs_actions = [eat_action, bake_action]
-        
+
         self.ac_problem = air_cargo_p1()
         self.ac_pg_serial = PlanningGraph(self.ac_problem, self.ac_problem.initial).fill()
         # In(C1, P2) and In(C2, P1) have inconsistent support when they first appear in
@@ -83,7 +106,7 @@ class TestPlanningGraphMutex(unittest.TestCase):
         self.neg_literals = [~x for x in self.pos_literals]
         self.literal_layer = LiteralLayer(self.pos_literals + self.neg_literals, ActionLayer())
         self.literal_layer.update_mutexes()
-        
+
         # independent actions for testing mutex
         self.actions = [
             make_node(Action(expr('Go(here)'), [set(), set()], [set([at_here]), set()])),
@@ -96,73 +119,110 @@ class TestPlanningGraphMutex(unittest.TestCase):
             self.action_layer.add_inbound_edges(action, action.preconditions)
             self.action_layer.add_outbound_edges(action, action.effects)
 
-    def test_inconsistent_effects_mutex(self): 
+    def test_inconsistent_effects_mutex1(self):
         acts = [self.actions[0], self.no_ops[0]]
-        self.assertFalse(self.action_layer._inconsistent_effects(*acts),
-            "'{!s}' and '{!s}' should NOT be mutually exclusive by inconsistent effects".format(*acts))
-        acts = [self.actions[0], self.no_ops[1]]
-        self.assertTrue(self.action_layer._inconsistent_effects(*acts), 
+        self.assertFalse(
+            self.action_layer._inconsistent_effects(*acts),
             "'{!s}' and '{!s}' should NOT be mutually exclusive by inconsistent effects".format(*acts))
 
+    def test_inconsistent_effects_mutex2(self):
+        acts = [self.actions[0], self.no_ops[1]]
+        self.assertTrue(
+            self.action_layer._inconsistent_effects(*acts),
+            "'{!s}' and '{!s}' should NOT be mutually exclusive by inconsistent effects".format(*acts))
+
+    def test_inconsistent_effects_mutex3(self):
         # inconsistent effects mutexes are static -- they should appear in the last layer of the planning graph
         for idx, layer in enumerate(self.cake_pg.action_layers):
             if set(self.inconsistent_effects_actions) <= layer:
-                self.assertTrue(layer.is_mutex(*self.inconsistent_effects_actions),
-                    ("Actions {} and {} were not mutex in layer {} of the planning graph").format(
-                        self.inconsistent_effects_actions[0], self.inconsistent_effects_actions[1], idx)
+                self.assertTrue(
+                    layer.is_mutex(*self.inconsistent_effects_actions),
+                    "Actions {} and {} were not mutex in layer {} of the planning graph".format(
+                        self.inconsistent_effects_actions[0], self.inconsistent_effects_actions[1], idx
+                    )
                 )
 
-    def test_interference_mutex(self):
+    def test_interference_mutex1(self):
         acts = [self.actions[0], self.actions[1]]
-        self.assertFalse(self.action_layer._interference(*acts),
-            "'{!s}' and '{!s}' should NOT be mutually exclusive by interference".format(*acts))
-        acts = [self.actions[0], self.no_ops[1]]
-        self.assertTrue(self.action_layer._interference(*acts),
+        self.assertFalse(
+            self.action_layer._interference(*acts),
             "'{!s}' and '{!s}' should NOT be mutually exclusive by interference".format(*acts))
 
+    def test_interference_mutex2(self):
+        acts = [self.actions[0], self.no_ops[1]]
+        self.assertTrue(
+            self.action_layer._interference(*acts),
+            "'{!s}' and '{!s}' should NOT be mutually exclusive by interference".format(*acts))
+
+    def test_interference_mutex3(self):
         # interference mutexes are static -- they should appear in the last layer of the planning graph
         for idx, layer in enumerate(self.cake_pg.action_layers):
             if set(self.interference_actions) <= layer:
-                self.assertTrue(layer.is_mutex(*self.interference_actions),
-                    ("Actions {} and {} were not mutex in layer {} of the planning graph").format(
-                        self.interference_actions[0], self.interference_actions[1], idx)
+                self.assertTrue(
+                    layer.is_mutex(*self.interference_actions),
+                    "Actions {} and {} were not mutex in layer {} of the planning graph".format(
+                        self.interference_actions[0], self.interference_actions[1], idx
+                    )
                 )
 
-    def test_competing_needs_mutex(self):
+    def test_competing_needs_mutex1(self):
         acts = [self.no_ops[0], self.no_ops[2]]
-        self.assertFalse(self.action_layer._competing_needs(*acts),
+        self.assertFalse(
+            self.action_layer._competing_needs(*acts),
             "'{!s}' and '{!s}' should NOT be mutually exclusive by competing needs".format(*acts))
+
+    def test_competing_needs_mutex2(self):
         acts = [self.no_ops[0], self.no_ops[1]]
-        self.assertTrue(self.action_layer._competing_needs(*acts),
+        self.assertTrue(
+            self.action_layer._competing_needs(*acts),
             "'{!s}' and '{!s}' should be mutually exclusive by competing needs".format(*acts))
 
-        # interference mutexes are dynamic -- they only appear in some levels of the planning graph
+    def test_competing_needs_mutex3(self):
+        # competing needs mutexes are dynamic -- they only appear in some levels of the planning graph
         for idx, layer in enumerate(self.cake_pg.action_layers):
             if set(self.competing_needs_actions) <= layer:
-                self.assertTrue(layer.is_mutex(*self.competing_needs_actions),
-                    ("Actions {} and {} were not mutex in layer {} of the planning graph").format(
-                        self.competing_needs_actions[0], self.competing_needs_actions[1], idx)
+                self.assertTrue(
+                    layer.is_mutex(*self.competing_needs_actions),
+                    "Actions {} and {} were not mutex in layer {} of the planning graph".format(
+                        self.competing_needs_actions[0], self.competing_needs_actions[1], idx
+                    )
                 )
 
-    def test_negation_mutex(self):
+    def test_negation_mutex1(self):
         lits = [self.pos_literals[0], self.neg_literals[0]]
-        self.assertTrue(self.literal_layer._negation(*lits),
+        self.assertTrue(
+            self.literal_layer._negation(*lits),
             "The literals '{}' and '{}' should be mutually exclusive by negation".format(*lits))
+
+    def test_negation_mutex2(self):
         lits = [self.pos_literals[0], self.neg_literals[1]]
-        self.assertFalse(self.literal_layer._negation(*lits),
+        self.assertFalse(
+            self.literal_layer._negation(*lits),
             "The literals '{}' and '{}' should NOT be mutually exclusive by negation".format(*lits))
 
+    def test_negation_mutex3(self):
         # Negation mutexes are static, so they should appear in every layer of the planning graph
-        self.assertTrue(all(self.cake_pg.literal_layers[-1].is_mutex(l, ~l) for l in self.cake_problem.state_map),
+        self.assertTrue(
+            all(self.cake_pg.literal_layers[-1].is_mutex(l, ~l) for l in self.cake_problem.state_map),
             "One or more literal was not marked as mutex with its negation in the last layer of the planning graph"
         )
 
-    def test_inconsistent_support_mutex(self):
+    def test_inconsistent_support_mutex1(self):
         # inconsistent support mutexes are dynamic -- they should not remain mutex at the last layer
-        self.assertTrue(self.ac_pg_serial.literal_layers[2]._inconsistent_support(*self.inconsistent_support_literals),
-            "The literals '{}' and '{}' should be mutually exclusive by inconsistent support in the second layer".format(*self.inconsistent_support_literals))
-        self.assertFalse(self.ac_pg_serial.literal_layers[-1]._inconsistent_support(*self.inconsistent_support_literals),
-            "The literals '{}' and '{}' should NOT be mutually exclusive by inconsistent support in the last layer".format(*self.inconsistent_support_literals))
+        self.assertTrue(
+            self.ac_pg_serial.literal_layers[2]._inconsistent_support(*self.inconsistent_support_literals),
+            "The literals '{}' and '{}' should be mutually exclusive by inconsistent support in the second layer".format(
+                *self.inconsistent_support_literals
+            )
+        )
+
+    def test_inconsistent_support_mutex2(self):
+        self.assertFalse(
+            self.ac_pg_serial.literal_layers[-1]._inconsistent_support(*self.inconsistent_support_literals),
+            "The literals '{}' and '{}' should NOT be mutually exclusive by inconsistent support in the last layer".format(
+                *self.inconsistent_support_literals
+            )
+        )
 
 
 if __name__ == '__main__':
