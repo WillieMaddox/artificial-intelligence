@@ -37,11 +37,11 @@ from .utils import (
 import itertools
 from collections import defaultdict
 
+
 # ______________________________________________________________________________
 
 
 class KB:
-
     """A knowledge base to which you can tell and ask sentences.
     To create a KB, first subclass this class and implement
     tell, ask_generator, and retract.  Why ask_generator instead of ask?
@@ -56,7 +56,7 @@ class KB:
         raise NotImplementedError
 
     def tell(self, sentence):
-        "Add the sentence to the KB."
+        """Add the sentence to the KB."""
         raise NotImplementedError
 
     def ask(self, query):
@@ -64,11 +64,11 @@ class KB:
         return first(self.ask_generator(query), default=False)
 
     def ask_generator(self, query):
-        "Yield all the substitutions that make query true."
+        """Yield all the substitutions that make query true."""
         raise NotImplementedError
 
     def retract(self, sentence):
-        "Remove sentence from the KB."
+        """Remove sentence from the KB."""
         raise NotImplementedError
 
 
@@ -81,36 +81,37 @@ class PropKB(KB):
             self.tell(sentence)
 
     def tell(self, sentence):
-        "Add the sentence's clauses to the KB."
+        """Add the sentence's clauses to the KB."""
         self.clauses.extend(conjuncts(to_cnf(sentence)))
 
     def ask_generator(self, query):
-        "Yield the empty substitution {} if KB entails query; else no results."
+        """Yield the empty substitution {} if KB entails query; else no results."""
         if tt_entails(Expr('&', *self.clauses), query):
             yield {}
 
     def ask_if_true(self, query):
-        "Return True if the KB entails query, else return False."
+        """Return True if the KB entails query, else return False."""
         for _ in self.ask_generator(query):
             return True
         return False
 
     def retract(self, sentence):
-        "Remove the sentence's clauses from the KB."
+        """Remove the sentence's clauses from the KB."""
         for c in conjuncts(to_cnf(sentence)):
             if c in self.clauses:
                 self.clauses.remove(c)
+
 
 # ______________________________________________________________________________
 
 
 def is_symbol(s):
-    "A string s is a symbol if it starts with an alphabetic char."
+    """A string s is a symbol if it starts with an alphabetic char."""
     return isinstance(s, str) and s[:1].isalpha()
 
 
 def is_var_symbol(s):
-    "A logic variable symbol is an initial-lowercase string."
+    """A logic variable symbol is an initial-lowercase string."""
     return is_symbol(s) and s[0].islower()
 
 
@@ -145,13 +146,14 @@ def is_definite_clause(s):
 
 
 def parse_definite_clause(s):
-    "Return the antecedents and the consequent of a definite clause."
+    """Return the antecedents and the consequent of a definite clause."""
     assert is_definite_clause(s)
     if is_symbol(s.op):
         return [], s
     else:
         antecedent, consequent = s.args
         return conjuncts(antecedent), consequent
+
 
 # Useful constant Exprs used in examples and code:
 A, B, C, D, E, F, G, P, Q, x, y, z = map(Expr, 'ABCDEFGPQxyz')
@@ -172,7 +174,7 @@ def tt_entails(kb, alpha):
 
 
 def tt_check_all(kb, alpha, symbols, model):
-    "Auxiliary routine to implement tt_entails."
+    """Auxiliary routine to implement tt_entails."""
     if not symbols:
         if pl_true(kb, model):
             result = pl_true(alpha, model)
@@ -187,7 +189,7 @@ def tt_check_all(kb, alpha, symbols, model):
 
 
 def prop_symbols(x):
-    "Return a list of all propositional symbols in x."
+    """Return a list of all propositional symbols in x."""
     if not isinstance(x, Expr):
         return []
     elif is_prop_symbol(x.op):
@@ -257,6 +259,7 @@ def pl_true(exp, model={}):
     else:
         raise ValueError("illegal operator in logic expression" + str(exp))
 
+
 # ______________________________________________________________________________
 
 # Convert to Conjunctive Normal Form (CNF)
@@ -277,7 +280,7 @@ def to_cnf(s):
 
 
 def eliminate_implications(s):
-    "Change implications into equivalent form with only &, |, and ~ as logical operators."
+    """Change implications into equivalent form with only &, |, and ~ as logical operators."""
     if s is False:
         s = expr("F")
     if s is True:
@@ -309,6 +312,7 @@ def move_not_inwards(s):
     if s.op == '~':
         def NOT(b):
             return move_not_inwards(~b)
+
         a = s.args[0]
         if a.op == '~':
             return move_not_inwards(a.args[0])  # ~~A ==> A
@@ -368,6 +372,7 @@ def associate(op, args):
     else:
         return Expr(op, *args)
 
+
 _op_identity = {'&': True, '|': False, '+': 0, '*': 1}
 
 
@@ -382,6 +387,7 @@ def dissociate(op, args):
                 collect(arg.args)
             else:
                 result.append(arg)
+
     collect(args)
     return result
 
@@ -405,17 +411,18 @@ def disjuncts(s):
     """
     return dissociate('|', [s])
 
+
 # ______________________________________________________________________________
 
 
 def pl_resolution(KB, alpha):
-    "Propositional-logic resolution: say if alpha follows from KB. [Figure 7.12]"
+    """Propositional-logic resolution: say if alpha follows from KB. [Figure 7.12]"""
     clauses = KB.clauses + conjuncts(to_cnf(~alpha))
     new = set()
     while True:
         n = len(clauses)
         pairs = [(clauses[i], clauses[j])
-                 for i in range(n) for j in range(i+1, n)]
+                 for i in range(n) for j in range(i + 1, n)]
         for (ci, cj) in pairs:
             resolvents = pl_resolve(ci, cj)
             if False in resolvents:
@@ -439,20 +446,20 @@ def pl_resolve(ci, cj):
                 clauses.append(associate('|', dnew))
     return clauses
 
+
 # ______________________________________________________________________________
 
 
 class PropDefiniteKB(PropKB):
-
-    "A KB of propositional definite clauses."
+    """A KB of propositional definite clauses."""
 
     def tell(self, sentence):
-        "Add a definite clause to this KB."
+        """Add a definite clause to this KB."""
         assert is_definite_clause(sentence), "Must be definite clause"
         self.clauses.append(sentence)
 
     def ask_generator(self, query):
-        "Yield the empty substitution if KB implies query; else nothing."
+        """Yield the empty substitution if KB implies query; else nothing."""
         if pl_fc_entails(self.clauses, query):
             yield {}
 
@@ -489,11 +496,11 @@ def pl_fc_entails(KB, q):
                     agenda.append(c.args[1])
     return False
 
+
 """ [Figure 7.13]
 Simple inference in a wumpus world example
 """
 wumpus_world_inference = expr("(B11 <=> (P12 | P21))  &  ~B11")
-
 
 """ [Figure 7.16]
 Propositional Logic Forward Chaining example
@@ -501,6 +508,7 @@ Propositional Logic Forward Chaining example
 horn_clauses_KB = PropDefiniteKB()
 for s in "P==>Q; (L&M)==>P; (B&L)==>M; (A&P)==>L; (A&B)==>L; A;B".split(';'):
     horn_clauses_KB.tell(expr(s))
+
 
 # ______________________________________________________________________________
 # DPLL-Satisfiable [Figure 7.17]
@@ -518,7 +526,7 @@ def dpll_satisfiable(s):
 
 
 def dpll(clauses, symbols, model):
-    "See if the clauses are true in a partial model."
+    """See if the clauses are true in a partial model."""
     unknown_clauses = []  # clauses with an unknown truth value
     for c in clauses:
         val = pl_true(c, model)
@@ -589,7 +597,7 @@ def unit_clause_assign(clause, model):
             if model[sym] == positive:
                 return None, None  # clause already True
         elif P:
-            return None, None      # more than 1 unbound variable
+            return None, None  # more than 1 unbound variable
         else:
             P, value = sym, positive
     return P, value
@@ -634,7 +642,7 @@ def unify(x, y, s):
 
 
 def is_variable(x):
-    "A variable is an Expr with no args and a lowercase symbol as the op."
+    """A variable is an Expr with no args and a lowercase symbol as the op."""
     return isinstance(x, Expr) and not x.args and x.op[0].islower()
 
 
@@ -664,7 +672,7 @@ def occur_check(var, x, s):
 
 
 def extend(s, var, val):
-    "Copy the substitution s and extend it by setting var to val; return copy."
+    """Copy the substitution s and extend it by setting var to val; return copy."""
     s2 = s.copy()
     s2[var] = val
     return s2
@@ -708,13 +716,14 @@ def standardize_variables(sentence, dic=None):
         return Expr(sentence.op,
                     *[standardize_variables(a, dic) for a in sentence.args])
 
+
 standardize_variables.counter = itertools.count()
+
 
 # ______________________________________________________________________________
 
 
 class FolKB(KB):
-
     """A knowledge base consisting of first-order definite clauses.
     >>> kb0 = FolKB([expr('Farmer(Mac)'), expr('Rabbit(Pete)'),
     ...              expr('(Rabbit(r) & Farmer(f)) ==> Hates(f, r)')])
@@ -771,6 +780,7 @@ def fol_bc_and(KB, goals, theta):
             for theta2 in fol_bc_and(KB, rest, theta1):
                 yield theta2
 
+
 # ______________________________________________________________________________
 
 # Example application (not in the book).
@@ -812,7 +822,7 @@ def diff(y, x):
 
 
 def simp(x):
-    "Simplify the expression x."
+    """Simplify the expression x."""
     if isnumber(x) or not x.args:
         return x
     args = list(map(simp, x.args))
@@ -875,5 +885,5 @@ def simp(x):
 
 
 def d(y, x):
-    "Differentiate and then simplify."
+    """Differentiate and then simplify."""
     return simp(diff(y, x))

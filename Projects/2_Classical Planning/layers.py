@@ -1,4 +1,3 @@
-
 from copy import deepcopy
 from functools import lru_cache
 from itertools import combinations
@@ -60,6 +59,7 @@ class ActionNode(object):
         (used to serialize planning graphs)
     """
     __slots__ = ['expr', 'preconditions', 'effects', 'no_op', '__hash']
+
     def __init__(self, symbol, preconditions, effects, no_op):
         self.expr = symbol
         self.preconditions = preconditions
@@ -68,11 +68,14 @@ class ActionNode(object):
         self.__hash = hash(symbol)
 
     def __hash__(self): return self.__hash
+
     def __str__(self): return str(self.expr)
+
     def __repr__(self): return self.__str__()
+
     def __eq__(self, other):
         return (isinstance(other, ActionNode)
-            and self.expr == other.expr)
+                and self.expr == other.expr)
 
 
 class BaseLayer(MutableSet):
@@ -111,6 +114,7 @@ class BaseLayer(MutableSet):
         mutexes are *always* enforced). For example, a literal X is always mutex
         with ~X, but "competing needs" or "inconsistent support" can be skipped
     """
+
     def __init__(self, items=[], parent_layer=None, ignore_mutexes=False):
         """
         Parameters
@@ -143,8 +147,8 @@ class BaseLayer(MutableSet):
 
     def __eq__(self, other):
         return (len(self) == len(other) and
-            len(self._mutexes) == len(other._mutexes) and
-            0 == len(self ^ other) and self._mutexes == other._mutexes)
+                len(self._mutexes) == len(other._mutexes) and
+                0 == len(self ^ other) and self._mutexes == other._mutexes)
 
     def add(self, item):
         self.__store.add(item)
@@ -160,13 +164,15 @@ class BaseLayer(MutableSet):
         self._mutexes[itemB].add(itemA)
 
     def is_mutex(self, itemA, itemB):
-        return itemA in self._mutexes.get(itemB, [])
+        setB = self._mutexes.get(itemB, [])
+        res = itemA in setB
+        return res
 
 
 class BaseActionLayer(BaseLayer):
     def __init__(self, actions=[], parent_layer=None, serialize=True, ignore_mutexes=False):
         super().__init__(actions, parent_layer, ignore_mutexes)
-        self._serialize=serialize
+        self._serialize = serialize
         if isinstance(actions, BaseActionLayer):
             self.parents.update({k: set(v) for k, v in actions.parents.items()})
             self.children.update({k: set(v) for k, v in actions.children.items()})
@@ -176,7 +182,7 @@ class BaseActionLayer(BaseLayer):
             if self._serialize and actionA.no_op == actionB.no_op == False:
                 self.set_mutex(actionA, actionB)
             elif (self._inconsistent_effects(actionA, actionB)
-                    or self._interference(actionA, actionB)):
+                  or self._interference(actionA, actionB)):
                 self.set_mutex(actionA, actionB)
             elif self._ignore_mutexes:
                 continue

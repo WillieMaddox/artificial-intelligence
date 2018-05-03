@@ -12,11 +12,11 @@ import sys
 
 infinity = float('inf')
 
+
 # ______________________________________________________________________________
 
 
 class Problem:
-
     """The abstract class for a formal problem.  You should subclass
     this and implement the methods actions and result, and possibly
     __init__, goal_test, and path_cost. Then you will create instances
@@ -64,11 +64,12 @@ class Problem:
         """For optimization problems, each state has a value.  Hill-climbing
         and related algorithms try to maximize this value."""
         raise NotImplementedError
+
+
 # ______________________________________________________________________________
 
 
 class Node:
-
     """A node in a search tree. Contains a pointer to the parent (the node
     that this is a successor of) and to the actual state for this node. Note
     that if a state is arrived at by two paths, then there are two nodes with
@@ -79,7 +80,7 @@ class Node:
     subclass this class."""
 
     def __init__(self, state, parent=None, action=None, path_cost=0):
-        "Create a search tree Node, derived from a parent by an action."
+        """Create a search tree Node, derived from a parent by an action."""
         self.state = state
         self.parent = parent
         self.action = action
@@ -95,23 +96,23 @@ class Node:
         return self.state < node.state
 
     def expand(self, problem):
-        "List the nodes reachable in one step from this node."
+        """List the nodes reachable in one step from this node."""
         return (self.child_node(problem, action)
                 for action in problem.actions(self.state))
 
     def child_node(self, problem, action):
-        "[Figure 3.10]"
+        """[Figure 3.10]"""
         next_state = problem.result(self.state, action)
         return Node(next_state, self, action,
                     problem.path_cost(self.path_cost, self.state,
                                       action, next_state))
 
     def solution(self):
-        "Return the sequence of actions to go from the root to this node."
+        """Return the sequence of actions to go from the root to this node."""
         return [node.action for node in self.path()[1:]]
 
     def path(self):
-        "Return a list of nodes forming the path from the root to this node."
+        """Return a list of nodes forming the path from the root to this node."""
         node, path_back = self, []
         while node:
             path_back.append(node)
@@ -128,6 +129,7 @@ class Node:
 
     def __hash__(self):
         return hash(self.state)
+
 
 # ______________________________________________________________________________
 # Uninformed Search algorithms
@@ -164,22 +166,22 @@ def graph_search(problem, frontier):
 
 
 def breadth_first_tree_search(problem):
-    "Search the shallowest nodes in the search tree first."
+    """Search the shallowest nodes in the search tree first."""
     return tree_search(problem, FIFOQueue())
 
 
 def depth_first_tree_search(problem):
-    "Search the deepest nodes in the search tree first."
+    """Search the deepest nodes in the search tree first."""
     return tree_search(problem, Stack())
 
 
 def depth_first_graph_search(problem):
-    "Search the deepest nodes in the search tree first."
+    """Search the deepest nodes in the search tree first."""
     return graph_search(problem, Stack())
 
 
 def breadth_first_search(problem):
-    "[Figure 3.11]"
+    """[Figure 3.11]"""
     node = Node(problem.initial)
     if problem.goal_test(node.state):
         return node
@@ -229,12 +231,13 @@ def best_first_graph_search(problem, f):
 
 
 def uniform_cost_search(problem):
-    "[Figure 3.14]"
+    """[Figure 3.14]"""
     return best_first_graph_search(problem, lambda node: node.path_cost)
 
 
 def depth_limited_search(problem, limit=50):
-    "[Figure 3.17]"
+    """[Figure 3.17]"""
+
     def recursive_dls(node, problem, limit):
         if problem.goal_test(node.state):
             return node
@@ -255,16 +258,19 @@ def depth_limited_search(problem, limit=50):
 
 
 def iterative_deepening_search(problem):
-    "[Figure 3.18]"
+    """[Figure 3.18]"""
     for depth in range(sys.maxsize):
         result = depth_limited_search(problem, depth)
         if result != 'cutoff':
             return result
 
+
 # ______________________________________________________________________________
 # Informed (Heuristic) Search
 
 greedy_best_first_graph_search = best_first_graph_search
+
+
 # Greedy best-first search is accomplished by specifying f(n) = h(n).
 
 
@@ -275,17 +281,18 @@ def astar_search(problem, h=None):
     h = memoize(h or problem.h, 'h')
     return best_first_graph_search(problem, lambda n: n.path_cost + h(n))
 
+
 # ______________________________________________________________________________
 # Other search algorithms
 
 
 def recursive_best_first_search(problem, h=None):
-    "[Figure 3.26]"
+    """[Figure 3.26]"""
     h = memoize(h or problem.h, 'h')
 
     def RBFS(problem, node, flimit):
         if problem.goal_test(node.state):
-            return node, 0   # (The second value is immaterial)
+            return node, 0  # (The second value is immaterial)
         successors = node.expand(problem)
         if len(successors) == 0:
             return None, infinity
@@ -310,13 +317,13 @@ def recursive_best_first_search(problem, h=None):
     result, bestf = RBFS(problem, node, infinity)
     return result
 
+
 # ______________________________________________________________________________
 
 # Code to compare searchers on various problems.
 
 
 class InstrumentedProblem(Problem):
-
     """Delegates to a problem, and keeps statistics."""
 
     def __init__(self, problem):
@@ -364,5 +371,6 @@ def compare_searchers(problems, header,
         p = InstrumentedProblem(problem)
         searcher(p)
         return p
+
     table = [[name(s)] + [do(s, p) for p in problems] for s in searchers]
     print_table(table, header)
