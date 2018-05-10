@@ -204,17 +204,21 @@ class TestPlanningGraphMutex(unittest.TestCase):
             self.action_layer._competing_needs(*acts),
             "'{!s}' and '{!s}' should be mutually exclusive by competing needs".format(*acts))
 
+    def test_competing_needs_mutex3(self):
         for acts in combinations(self.fake_competing_needs_actions, 2):
-            self.assertFalse(self.not_competing_action_layer._competing_needs(*acts),
+            self.assertFalse(
+                self.not_competing_action_layer._competing_needs(*acts),
                 ("'{!s}' and '{!s}' should NOT be mutually exclusive by competing needs unless " +
                  "every pair of actions is mutex in the parent layer").format(*acts))
 
+    def test_competing_needs_mutex4(self):
         for acts in combinations(self.fake_competing_needs_actions, 2):
-            self.assertTrue(self.competing_action_layer._competing_needs(*acts),
+            self.assertTrue(
+                self.competing_action_layer._competing_needs(*acts),
                 ("'{!s}' and '{!s}' should be mutually exclusive by competing needs if every " +
-                "pair of actions is mutex in the parent layer").format(*acts))
+                 "pair of actions is mutex in the parent layer").format(*acts))
 
-    def test_competing_needs_mutex3(self):
+    def test_competing_needs_mutex5(self):
         # competing needs mutexes are dynamic -- they only appear in some levels of the planning graph
         for idx, layer in enumerate(self.cake_pg.action_layers):
             if set(self.competing_needs_actions) <= layer:
