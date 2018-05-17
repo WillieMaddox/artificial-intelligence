@@ -130,6 +130,8 @@ class PlanningGraph:
         levelsum = 0
         goals = []
         while len(goals) != len(self.goal):
+            if self._is_leveled:
+                break
             self._extend()
             level += 1
             for goal in self.goal:
@@ -164,11 +166,14 @@ class PlanningGraph:
         maxlevel = -1
         goals = []
         while len(goals) != len(self.goal):
+            if self._is_leveled:
+                break
             self._extend()
             maxlevel += 1
             for goal in self.goal:
                 if goal not in goals and goal in self.literal_layers[maxlevel].children:
                     goals.append(goal)
+
         return maxlevel
 
     def h_setlevel(self):
@@ -191,8 +196,9 @@ class PlanningGraph:
         setlevel = -1
         while True:
             setlevel += 1
+            if self._is_leveled:
+                break
             self._extend()
-
             for goal in self.goal:
                 if goal not in self.literal_layers[setlevel]._mutexes:
                     goal_missing = True
