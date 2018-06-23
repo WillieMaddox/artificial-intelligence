@@ -28,9 +28,9 @@ TEST_AGENTS = {
 }
 
 
-def _run_matches(matches, name, num_processes=NUM_PROCS):
+def _run_matches(matches, name, num_processes=NUM_PROCS, debug=False):
     results = []
-    pool = Pool(num_processes)
+    pool = Pool(1) if debug else Pool(num_processes)
     print("Running {} games:".format(len(matches)))
     for result in pool.imap_unordered(play, matches):
         print("+" if result[0].name == name else '-', end="")
@@ -41,15 +41,15 @@ def _run_matches(matches, name, num_processes=NUM_PROCS):
 
 def make_fair_matches(matches, results):
     new_matches = []
+    state = Isolation()
     for _, game_history, match_id in results:
         match = matches[match_id]
-        state = Isolation()
         state = state.result(game_history[0]).result(game_history[1])
-        new_matches.append((match[0][::-1], state, TIME_LIMIT, -match_id))
+        new_matches.append((match[0][::-2], state, match[2], -match_id, match[-1]))
     return new_matches
 
 
-def play_matches(custom_agent, test_agent, num_rounds, num_procs=1, fair_matches=True):
+def play_matches(custom_agent, test_agent, cli_args):
     """ Play a specified number of rounds between two agents. Each round
     consists of two games, and each player plays as first player in one
     game and second player in the other. (This mitigates "unfair" games
@@ -63,26 +63,25 @@ def play_matches(custom_agent, test_agent, num_rounds, num_procs=1, fair_matches
     time, and then lose when their opponent uses that move against them).
     """
     matches = []
-    for match_id in range(num_rounds):
+    for match_id in range(cli_args.rounds):
         # initialize all games with a random move and response
         state = Isolation()
-        matches.append(((test_agent, custom_agent), state, TIME_LIMIT, match_id))
-        matches.append(((custom_agent, test_agent), state, TIME_LIMIT, match_id))
-    results = _run_matches(matches, custom_agent.name, num_procs)
+        matches.append(((test_agent, custom_agent), state, cli_args.time_limit, match_id, cli_args.debug))
+        matches.append(((custom_agent, test_agent), state, cli_args.time_limit, match_id, cli_args.debug))
+    results = _run_matches(matches, custom_agent.name, cli_args.processes)
 
-    if fair_matches:
+    if cli_args.fair_matches:
         _matches = make_fair_matches(matches, results)
-        results.extend(_run_matches(_matches, custom_agent.name, num_procs))
+        results.extend(_run_matches(_matches, custom_agent.name, cli_args.processes))
 
     wins = sum(int(r[0].name == custom_agent.name) for r in results)
-    return wins, len(matches) * (1 + int(fair_matches))
+    return wins, len(matches) * (1 + int(cli_args.fair_matches))
 
 
 def main(args):
     test_agent = TEST_AGENTS[args.opponent.upper()]
     custom_agent = Agent(CustomPlayer, "Custom Agent")
-    wins, num_games = play_matches(custom_agent, test_agent,
-        args.rounds, args.processes, args.fair_matches)
+    wins, num_games = play_matches(custom_agent, test_agent, args)
 
     logger.info("Your agent won {:.1f}% of matches against {}".format(
        100. * wins / num_games, test_agent.name))
@@ -107,6 +106,15 @@ if __name__ == "__main__":
 
                 $python run_match.py -r 100
         """)
+    )
+    parser.add_argument(
+        '-d', '--debug', action="store_true",
+        help="""\
+            Run the matches in debug mode, which disables multiprocessing & multithreading
+            support. This may be useful for inspecting memory contents during match execution,
+            however, this also prevents the isolation library from detecting timeouts and
+            terminating your code.
+        """
     )
     parser.add_argument(
         '-f', '--fair_matches', action="store_true",
@@ -156,7 +164,8 @@ if __name__ == "__main__":
         "Rounds: {}\n".format(args.rounds) +
         "Fair Matches: {}\n".format(args.fair_matches) +
         "Time Limit: {}\n".format(args.time_limit) +
-        "Processes: {}".format(args.processes)
+        "Processes: {}\n".format(args.processes) +
+        "Debug Mode: {}".format(args.debug)
     )
 
     main(args)
