@@ -208,12 +208,9 @@ class PlanningGraph:
 
             for goals in combinations(self.goal, 2):
                 if self.literal_layers[setlevel].is_mutex(*goals):
-                    has_mutex = True
-                    break
+                    break  # out of for loop
             else:
-                has_mutex = False
-            if not has_mutex:
-                break
+                break  # out of while loop
         return setlevel
 
     ##############################################################################
